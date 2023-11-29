@@ -22,13 +22,7 @@ data_path = "../../../data/DiffusionCropped"
 
 # Create dataset using ImageFolder
 emotion_dataset = datasets.ImageFolder(root=data_path, transform=transform)
-class_to_idx = emotion_dataset.class_to_idx
 
-# Invert the mapping to get index-to-class mapping
-idx_to_class = {idx: class_name for class_name, idx in class_to_idx.items()}
-
-# Print the index-to-class mapping
-print(idx_to_class)
 # Use DataLoader to create batches of data
 train_size = int(0.8 * len(emotion_dataset))  # 70% of the dataset for training
 val_size = int(0.1 * len(emotion_dataset))  # 15% for validation
