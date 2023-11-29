@@ -8,6 +8,7 @@ from torchvision import datasets, transforms
 
 # this model can be called with an img containing one face to predict the faces emotion
 # please try and use as little background as possible, aka only the face
+# should put so that gpu is used if available
 class EmotionDetector:
     def __init__(self):
         self.model = torch.jit.load("../model/cnn.pth")
