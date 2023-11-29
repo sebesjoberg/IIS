@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
@@ -11,7 +12,7 @@ transform = transforms.Compose(
         transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
         transforms.ToTensor(),
         transforms.Normalize(
-            mean=[0.485], std=[0.229]
+            mean=[0.473], std=[0.285]
         ),  # For grayscale, mean and std are single values
     ]
 )
@@ -21,46 +22,79 @@ data_path = "../../../data/DiffusionCropped"
 
 # Create dataset using ImageFolder
 emotion_dataset = datasets.ImageFolder(root=data_path, transform=transform)
+class_to_idx = emotion_dataset.class_to_idx
 
+# Invert the mapping to get index-to-class mapping
+idx_to_class = {idx: class_name for class_name, idx in class_to_idx.items()}
+
+# Print the index-to-class mapping
+print(idx_to_class)
 # Use DataLoader to create batches of data
-train_size = int(0.7 * len(emotion_dataset))  # 70% of the dataset for training
-val_size = int(0.15 * len(emotion_dataset))  # 15% for validation
+train_size = int(0.8 * len(emotion_dataset))  # 70% of the dataset for training
+val_size = int(0.1 * len(emotion_dataset))  # 15% for validation
 test_size = len(emotion_dataset) - train_size - val_size  # Remaining for test
 
 # Use random_split to split the dataset into train, validation, and test sets
 train_dataset, val_dataset, test_dataset = random_split(
-    emotion_dataset, [train_size, val_size, test_size]
+    emotion_dataset,
+    [train_size, val_size, test_size],
+    generator=torch.Generator().manual_seed(42),
 )
 
 # Create DataLoaders for train, validation, and test sets
-batch_size = 32
+batch_size = 16
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size)
-test_loader = DataLoader(test_dataset, batch_size=batch_size)
+val_loader = DataLoader(val_dataset)
+test_loader = DataLoader(test_dataset)
 
 
 class FaceCNN(nn.Module):
     def __init__(self):
         super(FaceCNN, self).__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(16, 24, kernel_size=3, padding=1)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.flattening = 24 * 28 * 28
-        self.fc1 = nn.Linear(self.flattening, 40)
-        self.fc2 = nn.Linear(40, 7)
-        self.dropout1 = nn.Dropout(0.1)
-        self.dropout2 = nn.Dropout(0.2)
-        self.dropout3 = nn.Dropout(0.3)
+        U1 = 16
+        U2 = 32
+        U3 = 64
+        self.U3flat = U3 * 26 * 26
+        U4 = 80
+        U5 = 7
+        self.W1 = nn.Parameter(0.1 * torch.randn(U1, 1, 5, 5))
+        self.b1 = nn.Parameter(torch.ones(U1) / 10)
+
+        self.W2 = nn.Parameter(0.1 * torch.randn(U2, U1, 5, 5))
+        self.b2 = nn.Parameter(torch.ones(U2) / 10)
+
+        self.W3 = nn.Parameter(0.1 * torch.randn(U3, U2, 4, 4))
+        self.b3 = nn.Parameter(torch.ones(U3) / 10)
+
+        self.W4 = nn.Parameter(0.1 * torch.randn(self.U3flat, U4))
+        self.b4 = nn.Parameter(torch.ones(U4) / 10)
+
+        self.W5 = nn.Parameter(0.1 * torch.randn(U4, U5))
+        self.b5 = nn.Parameter(torch.ones(U5) / 10)
+
+        self.maxpool = nn.MaxPool2d(2, 2)
+
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.25)
 
     def forward(self, x):
-        x = self.dropout1(self.pool(torch.relu(self.conv1(x))))
-        x = self.pool(torch.relu(self.conv2(x)))
-        x = self.dropout2(self.pool(torch.relu(self.conv3(x))))
-        x = x.view(-1, self.flattening)  # Flatten the output for fully connected layers
-        x = self.dropout3(torch.relu(self.fc1(x)))
-        x = self.fc2(x)
-        return x
+        Q1 = F.relu(F.conv2d(x, self.W1, bias=self.b1, stride=1, padding=1))
+        Q1 = self.maxpool(Q1)
+
+        Q2 = F.relu(F.conv2d(Q1, self.W2, bias=self.b2, stride=1, padding=1))
+        Q2 = self.dropout1(self.maxpool(Q2))
+
+        Q3 = F.relu(F.conv2d(Q2, self.W3, bias=self.b3, stride=1, padding=1))
+        Q3 = self.maxpool(Q3)
+
+        Q3flat = Q3.view(
+            -1, self.U3flat
+        )  # Flatten the output for fully connected layers
+
+        Q4 = self.dropout2(F.relu(Q3flat.mm(self.W4) + self.b4))
+
+        Z = Q4.mm(self.W5) + self.b5
+        return Z
 
 
 # Initialize the model
@@ -68,23 +102,24 @@ class FaceCNN(nn.Module):
 model = FaceCNN()
 
 # Define loss function and optimizer
-criterion = nn.CrossEntropyLoss()
+
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 best_val_accuracy = 0.0
 best_model_state = None
-num_epochs = 20
+num_epochs = 100
+PATH = "cnn.pth"
 for epoch in range(num_epochs):
-    model.train()
     running_loss = 0.0
     correct_train = 0
     total_train = 0
+    model.train()
     for i, data in enumerate(train_loader, 0):
         inputs, labels = data
 
         optimizer.zero_grad()
 
         outputs = model(inputs)
-        loss = criterion(outputs, labels)
+        loss = F.cross_entropy(outputs, labels)
         loss.backward()
         optimizer.step()
         _, predicted = torch.max(outputs.data, 1)
@@ -112,15 +147,37 @@ for epoch in range(num_epochs):
 
     # Check if current model has higher validation accuracy than the best model
     if val_accuracy > best_val_accuracy:
+        print("saving model")
         best_val_accuracy = val_accuracy
-        best_model_state = model.state_dict()
+        model_scripted = torch.jit.script(model)  # Export to TorchScript
+        model_scripted.save(PATH)  # Save
+
 
 # Load the best model state
 if best_model_state is not None:
-    model.load_state_dict(best_model_state)
-    print("Best model loaded based on validation accuracy.")
+    model = torch.jit.load(PATH)
+    model.eval()
+    print(
+        "Best model loaded based on validation accuracy, it had accuracy of:"
+        + str(best_val_accuracy)
+    )
 
 # Validation accuracy
+
+
+correct_train = 0
+total_train = 0
+with torch.no_grad():
+    for data in train_loader:
+        inputs, labels = data
+        outputs = model(inputs)
+        _, predicted = torch.max(outputs.data, 1)
+        total_train += labels.size(0)
+        correct_train += (predicted == labels).sum().item()
+
+train_accuracy = 100 * correct_train / total_train
+print(f"train Accuracy: {train_accuracy:.2f}%")
+
 correct_val = 0
 total_val = 0
 with torch.no_grad():
@@ -134,25 +191,19 @@ with torch.no_grad():
 val_accuracy = 100 * correct_val / total_val
 print(f"Validation Accuracy: {val_accuracy:.2f}%")
 # Test accuracy and loss after training with the best model
-model.eval()
+
 correct_test = 0
 total_test = 0
-test_loss = 0.0
+
 with torch.no_grad():
     for data in test_loader:
         inputs, labels = data
         outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        test_loss += loss.item()
+
         _, predicted = torch.max(outputs.data, 1)
         total_test += labels.size(0)
         correct_test += (predicted == labels).sum().item()
 
 test_accuracy = 100 * correct_test / total_test
-average_test_loss = test_loss / len(test_loader)
-print(f"Test Accuracy: {test_accuracy:.2f}%, Test Loss: {average_test_loss:.4f}")
 
-# Save the best model's state to a file
-if best_model_state is not None:
-    torch.save(best_model_state, "best_model.pth")
-    print("Best model saved.")
+print(f"Test Accuracy: {test_accuracy:.2f}%")

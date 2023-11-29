@@ -38,6 +38,7 @@ def picToCsv(datafolder="../../../data/DiffusionCropped"):
         try:
             for img in os.listdir(datafolder + "/" + emotion):
                 image = cv2.imread(datafolder + "/" + emotion + "/" + img)
+                print(image.shape)
                 images.append((image, emotion))
         except:
             pass
