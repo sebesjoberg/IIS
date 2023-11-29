@@ -5,3 +5,8 @@ Code belongs to Lucas Wallin, Adam Sundqvist, Allan Salimi, Eddie Laser and Seba
 # Data
 
 Data should be put into a map called "data", this data map is gitignored and should be provided by the user of this repo, the creators of this repo used the DiffusionFer dataset
+
+# furhatBartender
+
+contains the userInteraction and userPerception system
+can be ran trough the main.py
