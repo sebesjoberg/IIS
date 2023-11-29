@@ -1,2 +1,7 @@
-#Source code for project group MINT in course IIS
+# Source code for project group MINT in course IIS
+
 Code belongs to Lucas Wallin, Adam Sundqvist, Allan Salimi, Eddie Laser and Sebastian Sjöberg
+
+# Data
+
+Data should be put into a map called "data", this data map is gitignored and should be provided by the user of this repo, the creators of this repo used the DiffusionFer dataset
