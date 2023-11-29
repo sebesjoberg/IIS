@@ -5,3 +5,23 @@ Code belongs to Lucas Wallin, Adam Sundqvist, Allan Salimi, Eddie Laser and Seba
 # Data
 
 Data should be put into a map called "data", this data map is gitignored and should be provided by the user of this repo, the creators of this repo used the DiffusionFer dataset
+
+User perception to-do:
+
+1. Extract action units from data pictures
+2. Combine all au values and their corresponding label (emotion) into a big csv file to train the model on
+3. Find a suitable model, maybe compare several?, and train it on our big data
+4. Save the model
+5. Create a function that takes a picture as input, extracts au values and classifies the emotions based on our model
+
+User interaction to-do:
+
+1. Define, in a flow chart manner, a conversation flow that is based on the detected emotion of the human
+2. Inputs shall be current emotion, speech and a counter that counts on which question we are on (how long into the conversation we are)
+   When the counter reaches max (eg 4) then the bartender reccomends/serves a drink and resets the counter.
+   If reset, one idea it to switch the face and vioce of the bartender.
+3. Convert this into code in the userInteraction function that is called by the main function in furhatBartender
+
+Fun ideas to add if we have time:
+Bartender that keeps track of your name
+Bartenders have different personalities
