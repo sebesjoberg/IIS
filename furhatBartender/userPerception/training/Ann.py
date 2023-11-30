@@ -1,15 +1,12 @@
-import os
-import random
-from collections import defaultdict
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as transforms
-from PIL import Image
+from sklearn.model_selection import train_test_split
 from torch.optim import lr_scheduler
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, SubsetRandomSampler
+from torchvision import datasets
 
 # Define transforms for data preprocessing and augmentation
 transform = transforms.Compose(
@@ -32,61 +29,26 @@ transform = transforms.Compose(
 # Path to the root folder containing subfolders for each emotion
 data_path = "../../../data/MyDiffusion"
 
+full_dataset = datasets.ImageFolder(root=data_path, transform=transform)
 
-# Create a dictionary to hold file paths grouped by class
-class_to_files = defaultdict(list)
+# Extract labels and indices for stratified split
+targets = [label for _, label in full_dataset.samples]
+train_idx, temp_idx = train_test_split(
+    range(len(full_dataset)), test_size=0.2, random_state=42, stratify=targets
+)
+val_idx, test_idx = train_test_split(
+    temp_idx, test_size=0.5, random_state=42, stratify=[targets[i] for i in temp_idx]
+)
 
-# Iterate through the dataset directory to collect file paths for each class
-for root, dirs, files in os.walk(data_path):
-    for file in files:
-        class_name = os.path.basename(root)
-        file_path = os.path.join(root, file)
-        class_to_files[class_name].append(file_path)
+# Create SubsetRandomSampler for train, validation, and test
+train_sampler = SubsetRandomSampler(train_idx)
+val_sampler = SubsetRandomSampler(val_idx)
+test_sampler = SubsetRandomSampler(test_idx)
 
-# Perform stratified split based on class distributions
-train_files = []
-val_files = []
-test_files = []
-for class_files in class_to_files.values():
-    random.shuffle(class_files)
-    train_idx = int(0.8 * len(class_files))  # 80% train
-    val_idx = int(0.9 * len(class_files))  # 10% validation
-    train_files.extend(class_files[:train_idx])
-    val_files.extend(class_files[train_idx:val_idx])
-    test_files.extend(class_files[val_idx:])
-
-
-# Define your custom dataset class using the file paths
-class CustomDataset(Dataset):
-    def __init__(self, file_paths, transform=None):
-        self.file_paths = file_paths
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.file_paths)
-
-    def __getitem__(self, idx):
-        img_path = self.file_paths[idx]
-        image = Image.open(img_path).convert("RGB")  # Open image and convert to RGB
-        label = os.path.basename(
-            os.path.dirname(img_path)
-        )  # Get label from folder name
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image, label
-
-
-# Create CustomDataset instances for train, validation, and test
-train_dataset = CustomDataset(train_files, transform=transform)
-val_dataset = CustomDataset(val_files, transform=transform)
-test_dataset = CustomDataset(test_files, transform=transform)
-
-# Create DataLoader for train, validation, and test sets
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_dataset, shuffle=False)
-test_loader = DataLoader(test_dataset, shuffle=False)
+# Create DataLoaders using SubsetRandomSampler
+train_loader = DataLoader(full_dataset, batch_size=32, sampler=train_sampler)
+val_loader = DataLoader(full_dataset, batch_size=32, sampler=val_sampler)
+test_loader = DataLoader(full_dataset, batch_size=32, sampler=test_sampler)
 
 
 class FaceCNN(nn.Module):
