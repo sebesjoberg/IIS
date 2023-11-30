@@ -40,8 +40,8 @@ def picToCsv(datafolder="../../../data/DiffusionCropped"):
                 image = cv2.imread(datafolder + "/" + emotion + "/" + img)
                 print(image.shape)
                 images.append((image, emotion))
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     print("here")
     i = 0
@@ -58,8 +58,8 @@ def picToCsv(datafolder="../../../data/DiffusionCropped"):
             df.loc[len(df)] = saving
             i += 1
             print(i)
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     df.to_csv("dataset.csv", index=False)
 
