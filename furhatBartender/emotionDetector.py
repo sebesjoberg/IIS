@@ -20,7 +20,7 @@ class ConditionalToPILImage:
 
 class EmotionDetector:
     def __init__(self):
-        self.model = torch.jit.load("../model/cnn11-30-strat.pth")
+        self.model = torch.jit.load("userPerception/model/cnn11-30-strat.pth")
         self.model.eval()
         self.transform = transforms.Compose(
             [

@@ -1,10 +1,11 @@
 import cv2
-from emotionDetector import EmotionDetector
 
 
 class FaceDetector:
     def __init__(self):
-        self.model = cv2.CascadeClassifier("../model/frontal_face_features.xml")
+        self.model = cv2.CascadeClassifier(
+            "userPerception/model/frontal_face_features.xml"
+        )
 
     def find_face(self, image):  # takes grayscale image
         # return biggest face, if no face it returns none
@@ -23,6 +24,8 @@ class FaceDetector:
 
 
 if __name__ == "__main__":
+    from emotionDetector import EmotionDetector
+
     cam = cv2.VideoCapture(0)
     face_detector = FaceDetector()
     emotion_model = EmotionDetector()
