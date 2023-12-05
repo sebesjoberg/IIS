@@ -34,23 +34,25 @@ class EmotionDetector:
             ]
         )
         self.map = {
-            0: "angry",
-            1: "disgust",
-            2: "fear",
-            3: "happy",
-            4: "neutral",
-            5: "sad",
-            6: "surprise",
+            0: "Angry",
+            1: "Disgust",
+            2: "Fear",
+            3: "Happy",
+            4: "Neutral",
+            5: "Sad",
+            6: "Surprise",
         }
 
     def predict(self, image):
-        _, predicted = torch.max(self.model(self.transform(image)), 1)
-
+        prob = self.model(self.transform(image))
+        # prob[0, 4] -= 0.5
+        _, predicted = torch.max(prob, 1)
+        # print(prob)
         return self.map.get(predicted.item(), "Unknown Emotion")
 
     def evaluate(self):
         # Path to the root folder containing subfolders for each emotion
-        data_path = "../../../data/MyDiffusion"
+        data_path = "../data/MyDiffusion"
 
         full_dataset = datasets.ImageFolder(root=data_path, transform=self.transform)
 
@@ -115,7 +117,7 @@ def test_time(model):
     def classification(model, image):
         model.predict(image)
 
-    image = Image.open("../../../data/DiffusionCropped/angry/aaaaaaaa_6.png")
+    image = Image.open("../data/DiffusionCropped/angry/aaaaaaaa_6.png")
     times = 10
     execution_time = timeit.timeit(lambda: classification(model, image), number=times)
 
@@ -124,7 +126,7 @@ def test_time(model):
 
 if __name__ == "__main__":
     model = EmotionDetector()  # previews one prediction from the dataset
-    image = Image.open("../../../data/MyDiffusion/disgust/cropped_face_cjdxeady_5.png")
+    image = Image.open("../data/MyDiffusion/disgust/cropped_face_ahdmclwl_5.png")
     print(model.predict(image))
-    test_time(model)
+    # test_time(model)
     model.evaluate()

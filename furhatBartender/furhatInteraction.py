@@ -1,12 +1,49 @@
+import random
 from time import sleep
 
 from numpy.random import randint
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+analyzer = SentimentIntensityAnalyzer()
 FACES = {"Loo": "Patricia", "Amany": "Nazar"}
 
 VOICES_EN = {"Loo": "BellaNeural", "Amany": "CoraNeural"}
 
 VOICES_NATIVE = {"Loo": "SofieNeural", "Amany": "AmanyNeural"}
+drinkdict = {
+    "Indian Pale Ale": ["Angry", "Disgusted", "Bitter", True],
+    "Belgian Double": ["Angry", "Disgusted", "Sweet", True],
+    "Russian Imperial Stout": ["Angry", "Disgusted", "Strong", True],
+    "Rasberry Fruit Labmic": ["Angry", "Disgusted", "Fruity", True],
+    "American Pale Ale": ["Fear", "Surprise", "Bitter", True],
+    "Honey Wheat Ale": ["Fear", "Surprise", "Sweet", True],
+    "Belgian Triple": ["Fear", "Surprise", "Strong", True],
+    "Hefeweizen": ["Fear", "Surprise", "Fruity", True],
+    "Porter": ["Sad", "Neutral", "Bitter", True],
+    "Milk Stout": ["Sad", "Neutral", "Sweet", True],
+    "Barleywine": ["Sad", "Neutral", "Strong", True],
+    "Fruit Beer": ["Sad", "Neutral", "Fruity", True],
+    "Session IPA": ["Happy", "Bitter", True],
+    "Blonde Ale": ["Happy", "Sweet", True],
+    "Double IPA": ["Happy", "Strong", True],
+    "Fruit-infused Pale Ale": ["Happy", "Fruity", True],
+    "Negroni": ["Angry", "Disgusted", "Bitter", False],
+    "Bitter lemon drop": ["Angry", "Disgusted", "Sweet", False],
+    "Zombie": ["Angry", "Disgusted", "Strong", False],
+    "Rasberry Mojito": ["Angry", "Disgusted", "Fruity", False],
+    "Espresso Martini": ["Fear", "Surprise", "Bitter", False],
+    "Blue Lagoon": ["Fear", "Surprise", "Sweet", False],
+    "Long island iced tea": ["Fear", "Surprise", "Strong", False],
+    "Mango Tango": ["Fear", "Surprise", "Fruity", False],
+    "Americano": ["Sad", "Neutral", "Bitter", False],
+    "Amaretto Sour": ["Sad", "Neutral", "Sweet", False],
+    "Rusty Nail": ["Sad", "Neutral", "Strong", False],
+    "Bellini": ["Sad", "Neutral", "Fruity", False],
+    "Aperol Spritz": ["Happy", "Bitter", False],
+    "Mai Tai": ["Happy", "Sweet", False],
+    "Margarita": ["Happy", "Strong", False],
+    "Strawberry Daquiri": ["Happy", "Fruity", False],
+}
 
 
 def idle_animation(furhat):
@@ -115,37 +152,134 @@ def interaction(text, emotion, furhat, interaction_count, context):
         case 3:
             context = fourthInteraction(text, emotion, furhat, context)
 
+        case 4:
+            context = fifthInteraction(text, emotion, furhat, context)
+
         case _:
             context = bsay("Out of case")
     return context
 
 
 def firstInteraction(text, emotion, furhat, context):
-    bsay("What is your name friend?", furhat)
+    bsay("Hello, what is your name friend?", furhat)
     context["Question"] = "Name"
     return context
+
+
+map = {
+    0: "angry",
+    1: "disgust",
+    2: "fear",
+    3: "happy",
+    4: "neutral",
+    5: "sad",
+    6: "surprise",
+}
 
 
 def secondInteraction(text, emotion, furhat, context):
     if context["Question"] == "Name":
         context["Name"] = findName(text)
-    bsay("Welcome " + context["Name"], furhat)
+    bsay(f"Welcome, {context['Name']}, you can call me barty the bartender!", furhat)
+    if emotion in ["Angry", "Disgust"]:
+        bsay("Why so serious?", furhat)
+
+    elif emotion in ["Fear", "Surprise"]:
+        bsay("Is something bothering you?", furhat)
+
+    elif emotion in ["Sad", "Neutral"]:
+        bsay("It looks like you had a long day?", furhat)
+
+    else:
+        bsay("It is a good day is it not?", furhat)
+    context["Question"] = None
 
 
 def thirdInteraction(text, emotion, furhat, context):
-    bsay(text, emotion, furhat)
+    bsay("Well you have come to the right place then", furhat)
+    sleep(0.1)
+    bsay("Do you like beer?", furhat)
+    context["Question"] = "Beer"
+    return context
 
 
 def fourthInteraction(text, emotion, furhat, context):
-    bsay(text, emotion, furhat)
+    if context["Question"] == "Beer":
+        vs = analyzer.polarity_scores(text)
+        if vs["neg"] > vs["pos"]:
+            context["Beer"] = False
+            bsay("Cocktail it is!", furhat)
+        else:
+            context["Beer"] = True
+
+    bsay("Do you feel like something bitter, sweet, strong or fruity?", furhat)
+    context["Question"] = "Preference"
+    return context
+
+
+def fifthInteraction(text, emotion, furhat, context):
+    if context["Question"] == "Preference":
+        vs = analyzer.polarity_scores(text)
+        if "bitter" in text.lower():
+            context["Preference"] = "Bitter"
+        elif "sweet" in text.lower():
+            context["Preference"] = "Sweet"
+        elif "strong" in text.lower():
+            context["Preference"] = "Strong"
+        elif "fruity" in text.lower():
+            context["Preference"] = "Fruity"
+        else:
+            context["Preference"] = "None"
+
+        if vs["neg"] > vs["pos"]:
+            context[context["Preference"]] = False
+        else:
+            context[context["Preference"]] = True
+
+    drink = contextToDrink(
+        context["Beer"], emotion, context["Preference"], context[context["Preference"]]
+    )
+    if context["Beer"]:
+        drinkchoice = "beer"
+    else:
+        drinkchoice = "cocktail"
+    bsay(
+        f"Hmm.. I noticed that you seem to be {emotion}, that you would like a {drinkchoice} and that you would prefer something {context['Preference']}",
+        furhat,
+    )
+    bsay(f"How about a {drink}?", furhat)
+    return context
+
+
+def contextToDrink(beer, emotion, preference, preferencefeeling):
+    if preferencefeeling:
+        preference = [preference]
+
+    else:
+        if preference == "Bitter":
+            preference = ["Sweet", "Strong", "Fruity"]
+        elif preference == "Sweet":
+            preference = ["Bitter", "Strong", "Fruity"]
+        elif preference == "Strong":
+            preference = ["Bitter", "Sweet", "Fruity"]
+        else:
+            preference = ["Bitter", "Sweet", "Strong"]
+
+    # Bitter sweet stronf fruity
+    matching_drinks = []
+    for pref in preference:
+        for drink, ingredients in drinkdict.items():
+            if all(elem in ingredients for elem in [beer, emotion, pref]):
+                matching_drinks.append(drink)
+    return random.choice(matching_drinks)
 
 
 def findName(text):
-    return text.split()[0]
+    return text.split()[-1]
 
 
 if __name__ == "__main__":
-    end_program = False
-
-    demo_personas()
-    idle_animation()
+    # end_program = False
+    print(contextToDrink(False, "Happy", "Fruity", False))
+    # demo_personas()
+    # idle_animation()

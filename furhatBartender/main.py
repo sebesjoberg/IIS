@@ -1,4 +1,6 @@
 # Main file from where the actual bartender system can be ranned
+from time import sleep
+
 import cv2
 import speech_recognition as sr
 from emotionDetector import EmotionDetector
@@ -51,16 +53,22 @@ context = {}
 while True:
     aud = capture_voice_input()
     text = convert_voice_to_text(aud)
+    sleep(0.1)
     ret, frame = cam.read()
     if not ret:
         break
     face = FD.find_face(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-    x, y, w, h = face
 
-    emotion = ED.predict(frame[y : y + h, x : x + w])
+    if face is not None:
+        x, y, w, h = face
+
+        emotion = ED.predict(frame[y : y + h, x : x + w])
+    else:
+        emotion = "Neutral"
+
     interaction(text, emotion, furhat, interaction_count, context)
     interaction_count += 1
-    if interaction_count == 4:
+    if interaction_count == 5:
         interaction_count = 0
         context = {}
         break
