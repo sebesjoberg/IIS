@@ -101,8 +101,47 @@ def demo_personas(furhat):
     bsay("My name is Loo, my pronouns are they them! I speak English and Swedish")
 
 
-def interaction(text, emotion, furhat, interaction_count):
-    bsay(text + " " + emotion, furhat)
+def interaction(text, emotion, furhat, interaction_count, context):
+    match interaction_count:
+        case 0:
+            context = firstInteraction(text, emotion, furhat, context)
+
+        case 1:
+            context = secondInteraction(text, emotion, furhat, context)
+
+        case 2:
+            context = thirdInteraction(text, emotion, furhat, context)
+
+        case 3:
+            context = fourthInteraction(text, emotion, furhat, context)
+
+        case _:
+            context = bsay("Out of case")
+    return context
+
+
+def firstInteraction(text, emotion, furhat, context):
+    bsay("What is your name friend?", furhat)
+    context["Question"] = "Name"
+    return context
+
+
+def secondInteraction(text, emotion, furhat, context):
+    if context["Question"] == "Name":
+        context["Name"] = findName(text)
+    bsay("Welcome " + context["Name"], furhat)
+
+
+def thirdInteraction(text, emotion, furhat, context):
+    bsay(text, emotion, furhat)
+
+
+def fourthInteraction(text, emotion, furhat, context):
+    bsay(text, emotion, furhat)
+
+
+def findName(text):
+    return text.split()[0]
 
 
 if __name__ == "__main__":

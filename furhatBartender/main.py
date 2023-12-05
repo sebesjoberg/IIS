@@ -47,6 +47,7 @@ def process_voice_command(text):
 
 
 interaction_count = 0
+context = {}
 while True:
     aud = capture_voice_input()
     text = convert_voice_to_text(aud)
@@ -57,8 +58,9 @@ while True:
     x, y, w, h = face
 
     emotion = ED.predict(frame[y : y + h, x : x + w])
-    interaction(text, emotion, furhat, interaction_count)
+    interaction(text, emotion, furhat, interaction_count, context)
     interaction_count += 1
     if interaction_count == 4:
         interaction_count = 0
+        context = {}
         break
