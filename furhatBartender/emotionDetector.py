@@ -19,8 +19,22 @@ class ConditionalToPILImage:
 
 
 class EmotionDetector:
-    def __init__(self):
-        self.model = torch.jit.load("userPerception/model/cnn11-30-strat.pth")
+    def __init__(self, e4=True):
+        self.e4 = e4
+        if e4:
+            self.model = torch.jit.load("userPerception/model/cnn4class-strat.pth")
+            self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
+        else:
+            self.model = torch.jit.load("userPerception/model/cnn11-30-strat.pth")
+            self.map = {
+                0: "Angry",
+                1: "Disgust",
+                2: "Fear",
+                3: "Happy",
+                4: "Neutral",
+                5: "Sad",
+                6: "Surprise",
+            }
         self.model.eval()
         self.transform = transforms.Compose(
             [
@@ -33,15 +47,6 @@ class EmotionDetector:
                 ),  # For grayscale, mean and std are single values
             ]
         )
-        self.map = {
-            0: "Angry",
-            1: "Disgust",
-            2: "Fear",
-            3: "Happy",
-            4: "Neutral",
-            5: "Sad",
-            6: "Surprise",
-        }
 
     def predict(self, image):
         prob = self.model(self.transform(image))
@@ -52,7 +57,10 @@ class EmotionDetector:
 
     def evaluate(self):
         # Path to the root folder containing subfolders for each emotion
-        data_path = "../data/MyDiffusion"
+        if self.e4:
+            data_path = "../data/MyAggregatedDiffusion"
+        else:
+            data_path = "../data/MyDiffusion"
 
         full_dataset = datasets.ImageFolder(root=data_path, transform=self.transform)
 
@@ -113,11 +121,10 @@ class EmotionDetector:
         print(f"Test Accuracy: {test_accuracy:.2f}%")
 
 
-def test_time(model):
+def test_time(model, image):
     def classification(model, image):
         model.predict(image)
 
-    image = Image.open("../data/DiffusionCropped/angry/aaaaaaaa_6.png")
     times = 10
     execution_time = timeit.timeit(lambda: classification(model, image), number=times)
 
@@ -125,8 +132,14 @@ def test_time(model):
 
 
 if __name__ == "__main__":
-    model = EmotionDetector()  # previews one prediction from the dataset
-    image = Image.open("../data/MyDiffusion/disgust/cropped_face_ahdmclwl_5.png")
+    e4 = True
+    model = EmotionDetector(e4)  # previews one prediction from the dataset
+    if e4:
+        image = Image.open(
+            "../data/MyAggregatedDiffusion/aghast/cropped_face_alzbfyrn_3.png"
+        )
+    else:
+        image = Image.open("../data/MyDiffusion/disgust/cropped_face_ahdmclwl_5.png")
     print(model.predict(image))
-    # test_time(model)
+    test_time(model, image)
     model.evaluate()

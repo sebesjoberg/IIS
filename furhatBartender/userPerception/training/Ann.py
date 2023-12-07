@@ -27,7 +27,7 @@ transform = transforms.Compose(
 )
 
 # Path to the root folder containing subfolders for each emotion
-data_path = "../../../data/MyDiffusion"
+data_path = "../../../data/MyAggregatedDiffusion"
 
 full_dataset = datasets.ImageFolder(root=data_path, transform=transform)
 
@@ -59,7 +59,7 @@ class FaceCNN(nn.Module):
         U3 = 40
         self.U3flat = U3 * 7 * 7
         U4 = 30
-        U5 = 7
+        U5 = 4
         self.W1 = nn.Parameter(0.1 * torch.randn(U1, 1, 5, 5))
         self.b1 = nn.Parameter(torch.ones(U1) / 10)
 
@@ -104,7 +104,9 @@ class FaceCNN(nn.Module):
 # Initialize the model
 
 model = FaceCNN()
-
+weights = torch.tensor(
+    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
+)
 # Define loss function and optimizer
 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -126,7 +128,7 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         outputs = model(inputs)
-        loss = F.cross_entropy(outputs, labels)
+        loss = F.cross_entropy(outputs, labels, weight=weights)
         loss.backward()
         optimizer.step()
         _, predicted = torch.max(outputs.data, 1)

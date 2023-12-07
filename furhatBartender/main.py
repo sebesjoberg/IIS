@@ -1,12 +1,11 @@
 # Main file from where the actual bartender system can be ranned
-from time import sleep
 
 import cv2
 import speech_recognition as sr
 from emotionDetector import EmotionDetector
 from faceDetector import FaceDetector
 from furhat_remote_api import FurhatRemoteAPI
-from furhatInteraction import interaction
+from furhatInteraction import interaction, set_persona
 
 FD = FaceDetector()
 ED = EmotionDetector()
@@ -30,7 +29,7 @@ def convert_voice_to_text(aud):
         print("You said: " + text)
     except sr.UnknownValueError:
         text = ""
-        print("Sorry, I didn't understand that.")
+
     except sr.RequestError as e:
         text = ""
         print("Error; {0}".format(e))
@@ -48,12 +47,13 @@ def process_voice_command(text):
     return False
 
 
+# set persona her
+set_persona("Amany", furhat, async_req=True)
 interaction_count = 0
 context = {}
 while True:
     aud = capture_voice_input()
     text = convert_voice_to_text(aud)
-    sleep(0.1)
     ret, frame = cam.read()
     if not ret:
         break

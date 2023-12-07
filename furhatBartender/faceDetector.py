@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     cam = cv2.VideoCapture(0)
     face_detector = FaceDetector()
-    emotion_model = EmotionDetector()
+    emotion_model = EmotionDetector(True)
     while True:
         ret, frame = cam.read()
         if not ret:
