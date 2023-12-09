@@ -22,7 +22,7 @@ class EmotionDetector:
     def __init__(self, e4=True):
         self.e4 = e4
         if e4:
-            self.model = torch.jit.load("userPerception/model/cnn4class-stratdist.pth")
+            self.model = torch.jit.load("userPerception/model/cnn4big.pth")
             self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
             # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         else:
@@ -59,7 +59,7 @@ class EmotionDetector:
     def evaluate(self):
         # Path to the root folder containing subfolders for each emotion
         if self.e4:
-            data_path = "../data/MyAggregatedDiffusion"
+            data_path = "../data/4EmoKaggle+Diffusion"
         else:
             data_path = "../data/MyDiffusion"
 

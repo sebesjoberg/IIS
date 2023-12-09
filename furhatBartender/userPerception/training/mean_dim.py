@@ -43,3 +43,18 @@ weights = torch.tensor(
     [2004 / 10468, 1506 / 10468, 2922 / 10468, 4036 / 10468], dtype=torch.float
 )
 print(weights)
+# Initialize lists to store individual aspect ratios
+aspect_ratios = []
+
+# Calculate aspect ratio for each image and store in the list
+for i in range(total_images):
+    image_path = image_dataset.imgs[i][0]  # Get the path of the image
+    img = Image.open(image_path)
+    width, height = img.size
+    aspect_ratio = width / height
+    aspect_ratios.append(aspect_ratio)
+
+# Calculate the mean aspect ratio
+mean_aspect_ratio = sum(aspect_ratios) / len(aspect_ratios)
+
+print(f"Mean Aspect Ratio: {mean_aspect_ratio}")

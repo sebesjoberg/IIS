@@ -3,9 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as transforms
-from sklearn.model_selection import train_test_split
 from torch.optim import lr_scheduler
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader
 from torchvision import datasets
 
 # best model had 82.35% on validation set
@@ -31,7 +30,7 @@ train_transform = transforms.Compose(
         transforms.ColorJitter(
             brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1
         ),  # Color jitter
-        transforms.GaussianBlur(kernel_size=3, sigma=(0.01, 1)),
+        transforms.GaussianBlur(kernel_size=3, sigma=(0.01, 0.75)),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.473], std=[0.285]
@@ -39,28 +38,17 @@ train_transform = transforms.Compose(
     ]
 )
 # Path to the root folder containing subfolders for each emotion
-data_path = "../../../data/4EmoKaggle+Diffusion"
+data_path = "../../../data/customset"
 
-full_dataset = datasets.ImageFolder(root=data_path, transform=transform)
+train_set = datasets.ImageFolder(root=data_path + "/train", transform=train_transform)
+val_set = datasets.ImageFolder(root=data_path + "/val", transform=transform)
+test_set = datasets.ImageFolder(root=data_path + "/test", transform=transform)
 
-# Extract labels and indices for stratified split
-targets = [label for _, label in full_dataset.samples]
-train_idx, temp_idx = train_test_split(
-    range(len(full_dataset)), test_size=0.2, random_state=42, stratify=targets
-)
-val_idx, test_idx = train_test_split(
-    temp_idx, test_size=0.5, random_state=42, stratify=[targets[i] for i in temp_idx]
-)
-
-# Create SubsetRandomSampler for train, validation, and test
-train_sampler = SubsetRandomSampler(train_idx)
-val_sampler = SubsetRandomSampler(val_idx)
-test_sampler = SubsetRandomSampler(test_idx)
 
 # Create DataLoaders using SubsetRandomSampler
-train_loader = DataLoader(full_dataset, batch_size=32, sampler=train_sampler)
-val_loader = DataLoader(full_dataset, batch_size=32, sampler=val_sampler)
-test_loader = DataLoader(full_dataset, batch_size=32, sampler=test_sampler)
+train_loader = DataLoader(train_set, batch_size=32)
+val_loader = DataLoader(val_set, batch_size=32)
+test_loader = DataLoader(test_set, batch_size=32)
 
 
 class FaceCNN(nn.Module):
@@ -137,13 +125,11 @@ for epoch in range(num_epochs):
     correct_train = 0
     total_train = 0
     model.train()
-    if epoch % 10 == 0:  # every ten get to train on undistorted set
-        train_loader.dataset.transform = transform
-    else:
-        train_loader.dataset.transform = train_transform
+
     for i, data in enumerate(train_loader, 0):
         inputs, labels = data
-
+        inputs = inputs
+        labels = labels
         optimizer.zero_grad()
 
         outputs = model(inputs)
