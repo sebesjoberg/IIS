@@ -275,7 +275,10 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
 
 
 def findName(text):
-    return text.split()[-1]
+    try:
+        return text.split()[-1]
+    except:
+        return None
 
 
 if __name__ == "__main__":

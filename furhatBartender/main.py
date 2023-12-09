@@ -1,5 +1,9 @@
 # Main file from where the actual bartender system can be ranned
 
+import queue
+import threading
+from collections import Counter
+
 import cv2
 import speech_recognition as sr
 from emotionDetector import EmotionDetector
@@ -14,6 +18,7 @@ cam = cv2.VideoCapture(0)
 FURHAT_IP = "localhost"
 
 furhat = FurhatRemoteAPI(FURHAT_IP)
+emotion_queue = queue.Queue(maxsize=1)
 
 
 def capture_voice_input():
@@ -47,25 +52,52 @@ def process_voice_command(text):
     return False
 
 
-# set persona her
-set_persona("Amany", furhat, async_req=True)
+def calculate_emotion():
+    global cam, FD, ED, emotion_queue
+    last_emotions = []
+    while True:
+        ret, frame = cam.read()
+        if not ret:
+            break
+        face = FD.find_face(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+        if face is not None:
+            x, y, w, h = face
+            emotion = ED.predict(frame[y : y + h, x : x + w])
+            last_emotions.append(emotion)
+        if len(last_emotions) > 10:  # change this to make it more responsive/robust
+            last_emotions.pop(0)
+
+        if len(last_emotions) > 0:
+            most_common_emotion = Counter(last_emotions).most_common(1)
+            if most_common_emotion:
+                most_common_emotion = most_common_emotion[0][0]
+            else:
+                most_common_emotion = "Neutral"
+        else:
+            most_common_emotion = "Neutral"
+        try:
+            emotion_queue.put_nowait(most_common_emotion)
+        except queue.Full:
+            emotion_queue.get()
+            emotion_queue.put_nowait(most_common_emotion)
+
+
+emotion_thread = threading.Thread(target=calculate_emotion)
+emotion_thread.daemon = True
+emotion_thread.start()
+
+# set persona here
+set_persona("Amany", furhat)
 interaction_count = 0
 context = {}
 while True:
     aud = capture_voice_input()
     text = convert_voice_to_text(aud)
-    ret, frame = cam.read()
-    if not ret:
-        break
-    face = FD.find_face(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-
-    if face is not None:
-        x, y, w, h = face
-
-        emotion = ED.predict(frame[y : y + h, x : x + w])
-    else:
-        emotion = "Neutral"
-
+    try:
+        emotion = emotion_queue.get(timeout=1)  # Timeout to avoid blocking indefinitely
+    except queue.Empty:
+        emotion = "Neutral"  # Default emotion if queue is empty
+    print(emotion)
     interaction(text, emotion, furhat, interaction_count, context)
     interaction_count += 1
     if interaction_count == 5:

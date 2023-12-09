@@ -3,7 +3,7 @@ from PIL import Image
 from torchvision import datasets
 
 # Path to your dataset
-data_path = "../../../data/MyAggregatedDiffusion"
+data_path = "../../../data/4EmoKaggle+Diffusion"
 
 # Initialize ImageFolder dataset
 image_dataset = datasets.ImageFolder(data_path)
@@ -40,6 +40,6 @@ for class_name, count in class_counts.items():
     print(f"{class_name}: {count}")
 
 weights = torch.tensor(
-    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
+    [2004 / 10468, 1506 / 10468, 2922 / 10468, 4036 / 10468], dtype=torch.float
 )
 print(weights)

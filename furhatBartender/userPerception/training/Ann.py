@@ -8,26 +8,38 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import datasets
 
+# best model had 82.35% on validation set
 # Define transforms for data preprocessing and augmentation
 transform = transforms.Compose(
     [
         transforms.Resize((224, 224)),
         transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
-        transforms.RandomHorizontalFlip(
-            p=0.5
-        ),  # Random horizontal flip with probability 0.5
-        transforms.ColorJitter(
-            brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1
-        ),  # Color jitter
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.473], std=[0.285]
         ),  # For grayscale, mean and std are single values
     ]
 )
-
+train_transform = transforms.Compose(
+    [
+        transforms.Resize((224, 224)),
+        transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
+        transforms.RandomHorizontalFlip(
+            p=0.3
+        ),  # Random horizontal flip with probability 0.5
+        transforms.RandomVerticalFlip(p=0.4),
+        transforms.ColorJitter(
+            brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1
+        ),  # Color jitter
+        transforms.GaussianBlur(kernel_size=3, sigma=(0.01, 1)),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.473], std=[0.285]
+        ),  # For grayscale, mean and std are single values
+    ]
+)
 # Path to the root folder containing subfolders for each emotion
-data_path = "../../../data/MyAggregatedDiffusion"
+data_path = "../../../data/4EmoKaggle+Diffusion"
 
 full_dataset = datasets.ImageFolder(root=data_path, transform=transform)
 
@@ -55,10 +67,10 @@ class FaceCNN(nn.Module):
     def __init__(self):
         super(FaceCNN, self).__init__()
         U1 = 16
-        U2 = 28
-        U3 = 40
+        U2 = 32
+        U3 = 48
         self.U3flat = U3 * 7 * 7
-        U4 = 30
+        U4 = 40
         U5 = 4
         self.W1 = nn.Parameter(0.1 * torch.randn(U1, 1, 5, 5))
         self.b1 = nn.Parameter(torch.ones(U1) / 10)
@@ -77,8 +89,8 @@ class FaceCNN(nn.Module):
 
         self.maxpool = nn.MaxPool2d(2, 2)
 
-        self.dropout1 = nn.Dropout(0.3)
-        self.dropout2 = nn.Dropout(0.5)
+        self.dropout1 = nn.Dropout(0.2)
+        self.dropout2 = nn.Dropout(0.4)
 
     def forward(self, x):
         Q1 = F.relu(F.conv2d(x, self.W1, bias=self.b1, stride=1, padding=1))
@@ -104,8 +116,11 @@ class FaceCNN(nn.Module):
 # Initialize the model
 
 model = FaceCNN()
+# weights = torch.tensor(
+#    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
+# )
 weights = torch.tensor(
-    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
+    [2004 / 10468, 1506 / 10468, 2922 / 10468, 4036 / 10468], dtype=torch.float
 )
 # Define loss function and optimizer
 
@@ -122,6 +137,10 @@ for epoch in range(num_epochs):
     correct_train = 0
     total_train = 0
     model.train()
+    if epoch % 10 == 0:  # every ten get to train on undistorted set
+        train_loader.dataset.transform = transform
+    else:
+        train_loader.dataset.transform = train_transform
     for i, data in enumerate(train_loader, 0):
         inputs, labels = data
 
@@ -174,6 +193,7 @@ if best_model_state is not None:
         "Best model loaded based on validation accuracy, it had accuracy of:"
         + str(best_val_accuracy)
     )
+train_loader.dataset.transform = train_transform
 correct_train = 0
 total_train = 0
 correct_val = 0

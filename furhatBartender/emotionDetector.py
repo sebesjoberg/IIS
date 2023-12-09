@@ -22,7 +22,7 @@ class EmotionDetector:
     def __init__(self, e4=True):
         self.e4 = e4
         if e4:
-            self.model = torch.jit.load("userPerception/model/cnn4class-strat.pth")
+            self.model = torch.jit.load("userPerception/model/cnn4class-stratdist.pth")
             self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
             # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         else:

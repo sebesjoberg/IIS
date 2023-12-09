@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 # Path to the root folder containing subfolders for each emotion
-data_path = "../../../data/DiffusionCropped"
+data_path = "../../../data/myKaggleData"
 
 
 # Function to calculate mean and std for a dataset of grayscale images
