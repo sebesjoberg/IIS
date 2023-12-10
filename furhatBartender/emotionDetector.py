@@ -3,8 +3,7 @@ import timeit
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader
 from torchvision import datasets
 
 
@@ -22,7 +21,9 @@ class EmotionDetector:
     def __init__(self, e4=True):
         self.e4 = e4
         if e4:
-            self.model = torch.jit.load("userPerception/model/cnn4big.pth")
+            self.model = torch.jit.load(
+                "userPerception/model/cnn4big.pth"
+            )  # cnn4big.pth has 87-88-88 acuracy on the big set about 10k images
             self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
             # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         else:
@@ -59,33 +60,24 @@ class EmotionDetector:
     def evaluate(self):
         # Path to the root folder containing subfolders for each emotion
         if self.e4:
-            data_path = "../data/4EmoKaggle+Diffusion"
+            data_path = "../data/customset"
         else:
             data_path = "../data/MyDiffusion"
 
-        full_dataset = datasets.ImageFolder(root=data_path, transform=self.transform)
-
-        # Extract labels and indices for stratified split
-        targets = [label for _, label in full_dataset.samples]
-        train_idx, temp_idx = train_test_split(
-            range(len(full_dataset)), test_size=0.2, random_state=42, stratify=targets
+        train_set = datasets.ImageFolder(
+            root=data_path + "/train", transform=self.transform
         )
-        val_idx, test_idx = train_test_split(
-            temp_idx,
-            test_size=0.5,
-            random_state=42,
-            stratify=[targets[i] for i in temp_idx],
+        val_set = datasets.ImageFolder(
+            root=data_path + "/val", transform=self.transform
         )
-
-        # Create SubsetRandomSampler for train, validation, and test
-        train_sampler = SubsetRandomSampler(train_idx)
-        val_sampler = SubsetRandomSampler(val_idx)
-        test_sampler = SubsetRandomSampler(test_idx)
+        test_set = datasets.ImageFolder(
+            root=data_path + "/test", transform=self.transform
+        )
 
         # Create DataLoaders using SubsetRandomSampler
-        train_loader = DataLoader(full_dataset, batch_size=32, sampler=train_sampler)
-        val_loader = DataLoader(full_dataset, batch_size=32, sampler=val_sampler)
-        test_loader = DataLoader(full_dataset, batch_size=32, sampler=test_sampler)
+        train_loader = DataLoader(train_set, batch_size=32)
+        val_loader = DataLoader(val_set, batch_size=32)
+        test_loader = DataLoader(test_set, batch_size=32)
         correct_train = 0
         total_train = 0
         correct_val = 0

@@ -7,8 +7,6 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torchvision import datasets
 
-# best model had 82.35% on validation set
-# Define transforms for data preprocessing and augmentation
 transform = transforms.Compose(
     [
         transforms.Resize((224, 224)),
@@ -24,14 +22,15 @@ train_transform = transforms.Compose(
         transforms.Resize((224, 224)),
         transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
         transforms.RandomHorizontalFlip(
-            p=0.3
+            p=0.5
         ),  # Random horizontal flip with probability 0.5
-        transforms.RandomVerticalFlip(p=0.4),
         transforms.ColorJitter(
             brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1
         ),  # Color jitter
-        transforms.GaussianBlur(kernel_size=3, sigma=(0.01, 0.75)),
         transforms.ToTensor(),
+        transforms.RandomApply(
+            [transforms.GaussianBlur(kernel_size=3, sigma=0.15)], 0.5
+        ),
         transforms.Normalize(
             mean=[0.473], std=[0.285]
         ),  # For grayscale, mean and std are single values
@@ -78,7 +77,6 @@ class FaceCNN(nn.Module):
         self.maxpool = nn.MaxPool2d(2, 2)
 
         self.dropout1 = nn.Dropout(0.2)
-        self.dropout2 = nn.Dropout(0.4)
 
     def forward(self, x):
         Q1 = F.relu(F.conv2d(x, self.W1, bias=self.b1, stride=1, padding=1))
@@ -88,9 +86,7 @@ class FaceCNN(nn.Module):
         Q2 = self.dropout1(self.maxpool(Q2))
 
         Q3 = F.relu(F.conv2d(Q2, self.W3, bias=self.b3, stride=2, padding=2))
-
-        Q3 = self.dropout2(self.maxpool(Q3))
-
+        Q3 = self.maxpool(Q3)
         Q3flat = Q3.view(
             -1, self.U3flat
         )  # Flatten the output for fully connected layers
@@ -98,6 +94,7 @@ class FaceCNN(nn.Module):
         Q4 = F.relu(Q3flat.mm(self.W4) + self.b4)
 
         Z = Q4.mm(self.W5) + self.b5
+
         return Z
 
 
@@ -112,9 +109,9 @@ weights = torch.tensor(
 )
 # Define loss function and optimizer
 
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 scheduler = lr_scheduler.ReduceLROnPlateau(
-    optimizer, mode="min", factor=0.8, patience=3, verbose=True
+    optimizer, mode="min", factor=0.6, patience=3, verbose=True
 )
 best_val_accuracy = 0
 best_model_state = None
@@ -134,9 +131,10 @@ for epoch in range(num_epochs):
 
         outputs = model(inputs)
         loss = F.cross_entropy(outputs, labels, weight=weights)
+        running_loss += loss.item()
         loss.backward()
         optimizer.step()
-        _, predicted = torch.max(outputs.data, 1)
+        _, predicted = torch.max(outputs.data, dim=1)
         total_train += labels.size(0)
         correct_train += (predicted == labels).sum().item()
 
@@ -158,7 +156,10 @@ for epoch in range(num_epochs):
     scheduler.step(validation_loss)
     val_accuracy = 100 * correct_val / total_val
     print(
-        f"Epoch [{epoch + 1}/{num_epochs}], Training Accuracy: {train_accuracy:.2f}%, Validation Accuracy: {val_accuracy:.2f}%"
+        f"Epoch [{epoch + 1}/{num_epochs}], "
+        f"Training Accuracy: {train_accuracy:.2f}%, "
+        f"Validation Accuracy: {val_accuracy:.2f}%, "
+        f"Total Loss: {running_loss:.4f}"  # Printing total loss
     )
 
     # Check if current model has higher validation accuracy than the best model
