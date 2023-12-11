@@ -23,7 +23,7 @@ class EmotionDetector:
         if e4:
             self.model = torch.jit.load(
                 "userPerception/model/cnn4big.pth"
-            )  # cnn4big.pth has 87-88-88 acuracy on the big set about 10k images
+            )  # cnn4big.pth has 87-88-88 acuracy on the big set about 10k images, also seems to generalize well to humans
             self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
             # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         else:
