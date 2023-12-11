@@ -55,10 +55,16 @@ def process_voice_command(text):
 def calculate_emotion():
     global cam, FD, ED, emotion_queue
     last_emotions = []
+    nth_frame = 3
+    frame_counter = -1  # start from -1 so first frame is frame 0
     while True:
         ret, frame = cam.read()
+        frame_counter += 1
         if not ret:
             break
+        if frame_counter % nth_frame != 0:
+            continue  # Skip frames until the nth_frame is reached
+
         face = FD.find_face(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
         if face is not None:
             x, y, w, h = face
