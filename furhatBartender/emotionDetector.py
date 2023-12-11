@@ -120,7 +120,7 @@ def test_time(model, image):
 
 
 if __name__ == "__main__":
-    e4 = False
+    e4 = True
     model = EmotionDetector(e4)  # previews one prediction from the dataset
     image = Image.open("../data/7EmoSet/test/happy/happy_ahvsvhfy_1.png")
     print(model.predict(image))
