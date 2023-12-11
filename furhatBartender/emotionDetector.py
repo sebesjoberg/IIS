@@ -19,9 +19,12 @@ class ConditionalToPILImage:
 
 class EmotionDetector:
     def __init__(self, e4=True):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Using {self.device} for computations.")
         self.e4 = e4
         if e4:
             self.model = torch.jit.load("userPerception/model/cnn4big.pth")
+            self.model = self.model.to(self.device)
             self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
             # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         else:
@@ -49,7 +52,7 @@ class EmotionDetector:
         )
 
     def predict(self, image):
-        prob = self.model(self.transform(image))
+        prob = self.model(self.transform(image).to(self.device))
 
         _, predicted = torch.max(prob, 1)
 
@@ -82,23 +85,22 @@ class EmotionDetector:
         with torch.no_grad():
             for data in train_loader:
                 inputs, labels = data
-                outputs = self.model(inputs)
+                outputs = self.model(inputs.to(self.device))
                 _, predicted = torch.max(outputs.data, 1)
                 total_train += labels.size(0)
-                correct_train += (predicted == labels).sum().item()
+                correct_train += (predicted == labels.to(self.device)).sum().item()
             for data in val_loader:
                 inputs, labels = data
-                outputs = self.model(inputs)
+                outputs = self.model(inputs.to(self.device))
                 _, predicted = torch.max(outputs.data, 1)
                 total_val += labels.size(0)
-                correct_val += (predicted == labels).sum().item()
+                correct_val += (predicted == labels.to(self.device)).sum().item()
             for data in test_loader:
                 inputs, labels = data
-                outputs = self.model(inputs)
-
+                outputs = self.model(inputs.to(self.device))
                 _, predicted = torch.max(outputs.data, 1)
                 total_test += labels.size(0)
-                correct_test += (predicted == labels).sum().item()
+                correct_test += (predicted == labels.to(self.device)).sum().item()
 
         train_accuracy = 100 * correct_train / total_train
         print(f"train Accuracy: {train_accuracy:.2f}%")

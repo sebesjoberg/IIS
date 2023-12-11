@@ -99,25 +99,27 @@ class FaceCNN(nn.Module):
 
 
 # Initialize the model
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using {device} for computations.")
 keep_training = True
 if keep_training:
     PATH = "../model/cnn4big.pth"
-    model = torch.jit.load(PATH)
+    model = torch.jit.load(PATH).to(device)
     total_val = 0
     correct_val = 0
     model.eval()
     with torch.no_grad():
         for data in val_loader:
             inputs, labels = data
-            outputs = model(inputs)
+            outputs = model(inputs.to(device))
             _, predicted = torch.max(outputs.data, 1)
             total_val += labels.size(0)
-            correct_val += (predicted == labels).sum().item()
+            correct_val += (predicted == labels.to(device)).sum().item()
     best_val_accuracy = 100 * correct_val / total_val
     print(f"Validation Accuracy: {best_val_accuracy:.2f}%, ")
 
 else:
-    model = FaceCNN()
+    model = FaceCNN().to(device)
     best_val_accuracy = 0
 # weights = torch.tensor(
 #    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
@@ -143,8 +145,8 @@ for epoch in range(num_epochs):
 
     for i, data in enumerate(train_loader, 0):
         inputs, labels = data
-        inputs = inputs
-        labels = labels
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         optimizer.zero_grad()
 
         outputs = model(inputs)
@@ -166,6 +168,8 @@ for epoch in range(num_epochs):
         validation_loss = 0
         for data in val_loader:
             inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
             total_val += labels.size(0)
@@ -192,7 +196,7 @@ for epoch in range(num_epochs):
 
 # Load the best model state
 if best_model_state is not None:
-    model = torch.jit.load(SAVE_PATH)
+    model = torch.jit.load(SAVE_PATH).to(device)
     model.eval()
     print(
         "Best model loaded based on validation accuracy, it had accuracy of:"
@@ -208,18 +212,24 @@ total_test = 0
 with torch.no_grad():
     for data in train_loader:
         inputs, labels = data
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         outputs = model(inputs)
         _, predicted = torch.max(outputs.data, 1)
         total_train += labels.size(0)
         correct_train += (predicted == labels).sum().item()
     for data in val_loader:
         inputs, labels = data
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         outputs = model(inputs)
         _, predicted = torch.max(outputs.data, 1)
         total_val += labels.size(0)
         correct_val += (predicted == labels).sum().item()
     for data in test_loader:
         inputs, labels = data
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         outputs = model(inputs)
 
         _, predicted = torch.max(outputs.data, 1)
