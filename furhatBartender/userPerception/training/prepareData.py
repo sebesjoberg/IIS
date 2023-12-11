@@ -6,10 +6,10 @@ import cv2
 face_cascade = cv2.CascadeClassifier("../model/frontal_face_features.xml")
 
 # Path to your dataset folder containing subfolders for different emotions
-data_dir = "../../../data/KaggleData/test"
+data_dir = "../../../data/DiffusionFer"
 
 # Output directory to save cropped face images
-output_base_dir = "../../../data/MyKaggleData"
+output_base_dir = "../../../data/PreparedDiffusionFer"
 os.makedirs(output_base_dir, exist_ok=True)
 
 
@@ -42,7 +42,7 @@ def crop_and_save_largest_face(image_path, output_base_dir):
 
         # Save the largest face to the corresponding emotion folder
         output_path = os.path.join(
-            output_emotion_dir, f"test_{os.path.basename(image_path)}"
+            output_emotion_dir, f"{emotion}_{os.path.basename(image_path)}"
         )
         cv2.imwrite(output_path, face)
 

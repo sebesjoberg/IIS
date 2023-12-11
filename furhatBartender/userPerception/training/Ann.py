@@ -99,8 +99,26 @@ class FaceCNN(nn.Module):
 
 
 # Initialize the model
+keep_training = True
+if keep_training:
+    PATH = "../model/cnn4big.pth"
+    model = torch.jit.load(PATH)
+    total_val = 0
+    correct_val = 0
+    model.eval()
+    with torch.no_grad():
+        for data in val_loader:
+            inputs, labels = data
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs.data, 1)
+            total_val += labels.size(0)
+            correct_val += (predicted == labels).sum().item()
+    best_val_accuracy = 100 * correct_val / total_val
+    print(f"Validation Accuracy: {best_val_accuracy:.2f}%, ")
 
-model = FaceCNN()
+else:
+    model = FaceCNN()
+    best_val_accuracy = 0
 # weights = torch.tensor(
 #    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
 # )
@@ -113,10 +131,10 @@ optimizer = optim.Adam(model.parameters(), lr=0.01)
 scheduler = lr_scheduler.ReduceLROnPlateau(
     optimizer, mode="min", factor=0.6, patience=3, verbose=True
 )
-best_val_accuracy = 0
+
 best_model_state = None
 num_epochs = 100
-PATH = "cnn.pth"
+SAVE_PATH = "cnn.pth"
 for epoch in range(num_epochs):
     running_loss = 0.0
     correct_train = 0
@@ -159,7 +177,7 @@ for epoch in range(num_epochs):
         f"Epoch [{epoch + 1}/{num_epochs}], "
         f"Training Accuracy: {train_accuracy:.2f}%, "
         f"Validation Accuracy: {val_accuracy:.2f}%, "
-        f"Total Loss: {running_loss:.4f}"  # Printing total loss
+        f"Total Loss: {running_loss/total_train:.4f}"  # Printing total loss
     )
 
     # Check if current model has higher validation accuracy than the best model
@@ -167,14 +185,14 @@ for epoch in range(num_epochs):
         print("saving model")
         best_val_accuracy = val_accuracy
         model_scripted = torch.jit.script(model)  # Export to TorchScript
-        model_scripted.save(PATH)  # Save
+        model_scripted.save(SAVE_PATH)  # Save
 
     # Update the scheduler based on the validation loss
 
 
 # Load the best model state
 if best_model_state is not None:
-    model = torch.jit.load(PATH)
+    model = torch.jit.load(SAVE_PATH)
     model.eval()
     print(
         "Best model loaded based on validation accuracy, it had accuracy of:"

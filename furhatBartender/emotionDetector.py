@@ -21,13 +21,11 @@ class EmotionDetector:
     def __init__(self, e4=True):
         self.e4 = e4
         if e4:
-            self.model = torch.jit.load(
-                "userPerception/model/cnn4big.pth"
-            )  # cnn4big.pth has 87-88-88 acuracy on the big set about 10k images, also seems to generalize well to humans
+            self.model = torch.jit.load("userPerception/model/cnn4big.pth")
             self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
             # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         else:
-            self.model = torch.jit.load("userPerception/model/cnn11-30-strat.pth")
+            self.model = torch.jit.load("userPerception/model/cnn7small.pth")
             self.map = {
                 0: "Angry",
                 1: "Disgust",
@@ -52,32 +50,29 @@ class EmotionDetector:
 
     def predict(self, image):
         prob = self.model(self.transform(image))
-        # prob[0, 4] -= 0.5
+
         _, predicted = torch.max(prob, 1)
-        # print(prob)
+
         return self.map.get(predicted.item(), "Unknown Emotion")
 
     def evaluate(self):
         # Path to the root folder containing subfolders for each emotion
         if self.e4:
-            data_path = "../data/customset"
+            data_path = "../data/4EmoSet"
         else:
-            data_path = "../data/MyDiffusion"
-
-        train_set = datasets.ImageFolder(
-            root=data_path + "/train", transform=self.transform
+            data_path = "../data/7EmoSet"
+        train_loader = DataLoader(
+            datasets.ImageFolder(root=data_path + "/train", transform=self.transform),
+            batch_size=32,
         )
-        val_set = datasets.ImageFolder(
-            root=data_path + "/val", transform=self.transform
+        val_loader = DataLoader(
+            datasets.ImageFolder(root=data_path + "/val", transform=self.transform),
+            batch_size=32,
         )
-        test_set = datasets.ImageFolder(
-            root=data_path + "/test", transform=self.transform
+        test_loader = DataLoader(
+            datasets.ImageFolder(root=data_path + "/test", transform=self.transform),
+            batch_size=32,
         )
-
-        # Create DataLoaders using SubsetRandomSampler
-        train_loader = DataLoader(train_set, batch_size=32)
-        val_loader = DataLoader(val_set, batch_size=32)
-        test_loader = DataLoader(test_set, batch_size=32)
         correct_train = 0
         total_train = 0
         correct_val = 0
@@ -125,14 +120,9 @@ def test_time(model, image):
 
 
 if __name__ == "__main__":
-    e4 = True
+    e4 = False
     model = EmotionDetector(e4)  # previews one prediction from the dataset
-    if e4:
-        image = Image.open(
-            "../data/MyAggregatedDiffusion/aghast/cropped_face_alzbfyrn_3.png"
-        )
-    else:
-        image = Image.open("../data/MyDiffusion/disgust/cropped_face_ahdmclwl_5.png")
+    image = Image.open("../data/7EmoSet/test/happy/happy_ahvsvhfy_1.png")
     print(model.predict(image))
     test_time(model, image)
     model.evaluate()
