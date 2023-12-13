@@ -1,9 +1,11 @@
 import random
 from time import sleep
 
+import spacy
 from numpy.random import randint
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+nlp = spacy.load("en_core_web_trf")
 analyzer = SentimentIntensityAnalyzer()
 FACES = {"Loo": "Patricia", "Amany": "Nazar"}
 
@@ -117,7 +119,7 @@ def bsay(line, furhat):
 def interaction(text, emotion, furhat, interaction_count, context):
     match interaction_count:
         case 0:
-            # here we could do some check for potential drink order
+            # here we could do some check for potential drink order using the spacy nl for NOUNS perhaps and matching to our drink_dict
             context = firstInteraction(text, emotion, furhat, context)
 
         case 1:
@@ -247,15 +249,20 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
     return random.choice(matching_drinks)
 
 
-def findName(text):  # this could be more sophisticated
-    try:
-        return text.split()[-1]
-    except:
-        return None
+def findName(text):
+    doc = nlp(text)
+    return [ent for ent in doc.ents if ent.label_ == "PERSON"][0]
+
+    # legacy code down below
+    # try:
+    # return text.split()[-1]
+    # except:
+    # return None
 
 
 if __name__ == "__main__":
     # end_program = False
-    print(contextToDrink(True, "Furious", "Fruity", False))
+    # print(contextToDrink(True, "Furious", "Fruity", False))
     # demo_personas()
     # idle_animation()
+    print(findName("My name is Sebastian"))
