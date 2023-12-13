@@ -223,6 +223,7 @@ def fifthInteraction(text, emotion, furhat, context):
         furhat,
     )
     bsay(f"How about a {drink}?", furhat)
+
     return context
 
 
@@ -265,4 +266,4 @@ if __name__ == "__main__":
     # print(contextToDrink(True, "Furious", "Fruity", False))
     # demo_personas()
     # idle_animation()
-    print(findName("My name is Sebastian"))
+    print(findName("john, My name is Sebastian"))
