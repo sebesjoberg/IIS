@@ -96,6 +96,11 @@ emotion_thread.start()
 set_persona("Amany", furhat)
 interaction_count = 0
 context = {}
+# could make the whole loop into a function that runs over the specified interaction max count
+# run the loop until max count, but only start/restart the loop if a face appears in the frame?
+# should probably restart the whole emotionthread in that case too
+# do put that emotion on the first face in the queue too(so that it is not empty for first interaction)
+# when doing this our abrtender could also be the one initializing the convo
 while True:
     aud = capture_voice_input()
     text = convert_voice_to_text(aud)
