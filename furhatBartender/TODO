@@ -1,5 +1,12 @@
 gaze control
-more emotionally versitaile interactions
-facial expressions
-do some controll so that face is in front of furhat
-when starting the whole interaction chain
+more emotionally versitaile interactions, eg tone of message
+facial expressions on furhat
+also idle animations when talking, perhaps start a thread when listening for user input that does some random idle animations
+the above could also depend on user emotions some, eg different idle animations when suer is happy and so on
+
+also bypass the whole interaction system when a customer simply goes up to furhat and orders drink
+slightly deeper interaction, allowing the user to say no to their drink recomendation and pick something else (from menu)
+if not on menu perhaps simply saying nope that is not a valid drink you will get the recomendation instead
+
+pause the furhat until face is actually visible in picture (before interaction chain starts has to detect face)
+flush the emotion detection list

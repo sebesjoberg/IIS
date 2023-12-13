@@ -18,26 +18,14 @@ class ConditionalToPILImage:
 
 
 class EmotionDetector:
-    def __init__(self, e4=True):
+    def __init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using {self.device} for computations.")
-        self.e4 = e4
-        if e4:
-            self.model = torch.jit.load("userPerception/model/cnn4big.pth")
-            self.model = self.model.to(self.device)
-            self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
-            # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
-        else:
-            self.model = torch.jit.load("userPerception/model/cnn7small.pth")
-            self.map = {
-                0: "Angry",
-                1: "Disgust",
-                2: "Fear",
-                3: "Happy",
-                4: "Neutral",
-                5: "Sad",
-                6: "Surprise",
-            }
+
+        self.model = torch.jit.load("userPerception/model/cnn4big.pth")
+        self.model = self.model.to(self.device)
+        self.map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
+        # angry+disgusted = furious, happy=happy, sad+neutral=melancholic fear+surprise = aghast
         self.model.eval()
         self.transform = transforms.Compose(
             [
@@ -60,10 +48,7 @@ class EmotionDetector:
 
     def evaluate(self):
         # Path to the root folder containing subfolders for each emotion
-        if self.e4:
-            data_path = "../data/4EmoSet"
-        else:
-            data_path = "../data/7EmoSet"
+        data_path = "../data/4EmoSet"
         train_loader = DataLoader(
             datasets.ImageFolder(root=data_path + "/train", transform=self.transform),
             batch_size=32,
@@ -122,9 +107,8 @@ def test_time(model, image):
 
 
 if __name__ == "__main__":
-    e4 = True
-    model = EmotionDetector(e4)  # previews one prediction from the dataset
-    image = Image.open("../data/7EmoSet/test/happy/happy_ahvsvhfy_1.png")
-    print(model.predict(image))
+    model = EmotionDetector()
+    image = Image.open("../data/4EmoSet/test/happy/happy_ahvsvhfy_1.png")
+    print(model.predict(image))  # previews one prediction from the dataset
     test_time(model, image)
     model.evaluate()

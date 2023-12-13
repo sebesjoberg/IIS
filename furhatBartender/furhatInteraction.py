@@ -11,34 +11,34 @@ VOICES_EN = {"Loo": "BellaNeural", "Amany": "CoraNeural"}
 
 VOICES_NATIVE = {"Loo": "SofieNeural", "Amany": "AmanyNeural"}
 drinkdict = {
-    "Indian Pale Ale": ["Angry", "Disgusted", "Bitter", True],
-    "Belgian Double": ["Angry", "Disgusted", "Sweet", True],
-    "Russian Imperial Stout": ["Angry", "Disgusted", "Strong", True],
-    "Rasberry Fruit Labmic": ["Angry", "Disgusted", "Fruity", True],
-    "American Pale Ale": ["Fear", "Surprise", "Bitter", True],
-    "Honey Wheat Ale": ["Fear", "Surprise", "Sweet", True],
-    "Belgian Triple": ["Fear", "Surprise", "Strong", True],
-    "Hefeweizen": ["Fear", "Surprise", "Fruity", True],
-    "Porter": ["Sad", "Neutral", "Bitter", True],
-    "Milk Stout": ["Sad", "Neutral", "Sweet", True],
-    "Barleywine": ["Sad", "Neutral", "Strong", True],
-    "Fruit Beer": ["Sad", "Neutral", "Fruity", True],
+    "Indian Pale Ale": ["Furious", "Bitter", True],
+    "Belgian Double": ["Furious", "Sweet", True],
+    "Russian Imperial Stout": ["Furious", "Strong", True],
+    "Rasberry Fruit Labmic": ["Furious", "Fruity", True],
+    "American Pale Ale": ["Aghast", "Bitter", True],
+    "Honey Wheat Ale": ["Aghast", "Sweet", True],
+    "Belgian Triple": ["Aghast", "Strong", True],
+    "Hefeweizen": ["Aghast", "Fruity", True],
+    "Porter": ["Melancholic", "Bitter", True],
+    "Milk Stout": ["Melancholic", "Sweet", True],
+    "Barleywine": ["Melancholic", "Strong", True],
+    "Fruit Beer": ["Melancholic", "Fruity", True],
     "Session IPA": ["Happy", "Bitter", True],
     "Blonde Ale": ["Happy", "Sweet", True],
     "Double IPA": ["Happy", "Strong", True],
     "Fruit-infused Pale Ale": ["Happy", "Fruity", True],
-    "Negroni": ["Angry", "Disgusted", "Bitter", False],
-    "Bitter lemon drop": ["Angry", "Disgusted", "Sweet", False],
-    "Zombie": ["Angry", "Disgusted", "Strong", False],
-    "Rasberry Mojito": ["Angry", "Disgusted", "Fruity", False],
-    "Espresso Martini": ["Fear", "Surprise", "Bitter", False],
-    "Blue Lagoon": ["Fear", "Surprise", "Sweet", False],
-    "Long island iced tea": ["Fear", "Surprise", "Strong", False],
-    "Mango Tango": ["Fear", "Surprise", "Fruity", False],
-    "Americano": ["Sad", "Neutral", "Bitter", False],
-    "Amaretto Sour": ["Sad", "Neutral", "Sweet", False],
-    "Rusty Nail": ["Sad", "Neutral", "Strong", False],
-    "Bellini": ["Sad", "Neutral", "Fruity", False],
+    "Negroni": ["Furious", "Bitter", False],
+    "Bitter lemon drop": ["Furious", "Sweet", False],
+    "Zombie": ["Furious", "Strong", False],
+    "Rasberry Mojito": ["Furious", "Fruity", False],
+    "Espresso Martini": ["Aghast", "Bitter", False],
+    "Blue Lagoon": ["Aghast", "Sweet", False],
+    "Long island iced tea": ["Aghast", "Strong", False],
+    "Mango Tango": ["Aghast", "Fruity", False],
+    "Americano": ["Melancholic", "Bitter", False],
+    "Amaretto Sour": ["Melancholic", "Sweet", False],
+    "Rusty Nail": ["Melancholic", "Strong", False],
+    "Bellini": ["Melancholic", "Fruity", False],
     "Aperol Spritz": ["Happy", "Bitter", False],
     "Mai Tai": ["Happy", "Sweet", False],
     "Margarita": ["Happy", "Strong", False],
@@ -114,33 +114,10 @@ def bsay(line, furhat):
     furhat.say(text=line, blocking=True)
 
 
-def demo_personas(furhat):
-    set_persona("Amany")
-    # furhat.
-    # birthdate = furhat.ask("Which date were you born?")
-    # furhat.say(f"You were born on {birthdate}")
-
-    bsay("Lucky is a liitle bitch")
-    furhat.set_voice(name=VOICES_NATIVE["Amany"])
-    bsay("يسعدني أن ألتقي بكم جميعا!")  # Nice to meet you all
-    furhat.set_voice(name=VOICES_EN["Amany"])
-
-    sleep(1)
-    idle_animation()
-    sleep(1)
-
-    set_persona("Loo")
-    furhat.set_voice(name=VOICES_NATIVE["Loo"])
-    furhat.gesture(name="Smile")
-    bsay("Hej allihopa!")
-    furhat.set_voice(name=VOICES_EN["Loo"])
-    furhat.gesture(name="Smile")
-    bsay("My name is Loo, my pronouns are they them! I speak English and Swedish")
-
-
 def interaction(text, emotion, furhat, interaction_count, context):
     match interaction_count:
         case 0:
+            # here we could do some check for potential drink order
             context = firstInteraction(text, emotion, furhat, context)
 
         case 1:
@@ -160,34 +137,26 @@ def interaction(text, emotion, furhat, interaction_count, context):
     return context
 
 
+map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
+
+
 def firstInteraction(text, emotion, furhat, context):
     bsay("Hello, what is your name friend?", furhat)
     context["Question"] = "Name"
     return context
 
 
-map = {
-    0: "angry",
-    1: "disgust",
-    2: "fear",
-    3: "happy",
-    4: "neutral",
-    5: "sad",
-    6: "surprise",
-}
-
-
 def secondInteraction(text, emotion, furhat, context):
     if context["Question"] == "Name":
         context["Name"] = findName(text)
     bsay(f"Welcome, {context['Name']}, you can call me barty the bartender!", furhat)
-    if emotion in ["Angry", "Disgust"]:
+    if emotion in ["Furious"]:
         bsay("Why so serious?", furhat)
 
-    elif emotion in ["Fear", "Surprise"]:
+    elif emotion in ["Aghast"]:
         bsay("Is something bothering you?", furhat)
 
-    elif emotion in ["Sad", "Neutral"]:
+    elif emotion in ["Melancholic"]:
         bsay("It looks like you had a long day?", furhat)
 
     else:
@@ -243,8 +212,12 @@ def fifthInteraction(text, emotion, furhat, context):
         drinkchoice = "beer"
     else:
         drinkchoice = "cocktail"
+    if context[context["preference"]]:
+        line = f"Hmm.. I noticed that you seem to be {emotion}, that you would like a {drinkchoice}, and that you would prefer something {context['Preference']}."
+    else:
+        line = f"Hmm.. I noticed that you seem to be {emotion}, that you would like a {drinkchoice}, and that you would not prefer something {context['Preference']}."
     bsay(
-        f"Hmm.. I noticed that you seem to be {emotion}, that you would like a {drinkchoice} and that you would prefer something {context['Preference']}",
+        line,
         furhat,
     )
     bsay(f"How about a {drink}?", furhat)
@@ -265,7 +238,7 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
         else:
             preference = ["Bitter", "Sweet", "Strong"]
 
-    # Bitter sweet stronf fruity
+    # Bitter sweet strong fruity
     matching_drinks = []
     for pref in preference:
         for drink, ingredients in drinkdict.items():
@@ -274,7 +247,7 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
     return random.choice(matching_drinks)
 
 
-def findName(text):
+def findName(text):  # this could be more sophisticated
     try:
         return text.split()[-1]
     except:
@@ -283,6 +256,6 @@ def findName(text):
 
 if __name__ == "__main__":
     # end_program = False
-    print(contextToDrink(False, "Happy", "Fruity", False))
+    print(contextToDrink(True, "Furious", "Fruity", False))
     # demo_personas()
     # idle_animation()
