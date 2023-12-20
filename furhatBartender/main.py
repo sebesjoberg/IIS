@@ -111,7 +111,7 @@ while True:
     print(emotion)
     interaction(text, emotion, furhat, interaction_count, context)
     interaction_count += 1
-    if interaction_count == 5:
+    if interaction_count == 6:
         interaction_count = 0
         context = {}
         break
