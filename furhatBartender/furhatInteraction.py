@@ -133,6 +133,9 @@ def interaction(text, emotion, furhat, interaction_count, context):
 
         case 4:
             context = fifthInteraction(text, emotion, furhat, context)
+            
+        case 5: 
+            context = sixthInteraction(text, emotion, furhat, context)
 
         case _:
             context = bsay("Out of case")
@@ -145,6 +148,7 @@ map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
 def firstInteraction(text, emotion, furhat, context):
     bsay("Hello, what is your name friend?", furhat)
     context["Question"] = "Name"
+    print("context 1 : ", context)
     return context
 
 
@@ -164,6 +168,7 @@ def secondInteraction(text, emotion, furhat, context):
     else:
         bsay("It is a good day is it not?", furhat)
     context["Question"] = None
+    print("context 2 : ", context)
 
 
 def thirdInteraction(text, emotion, furhat, context):
@@ -171,6 +176,7 @@ def thirdInteraction(text, emotion, furhat, context):
     sleep(0.1)
     bsay("Do you like beer?", furhat)
     context["Question"] = "Beer"
+    print("context 3 : ", context)
     return context
 
 
@@ -185,6 +191,7 @@ def fourthInteraction(text, emotion, furhat, context):
 
     bsay("Do you feel like something bitter, sweet, strong or fruity?", furhat)
     context["Question"] = "Preference"
+    print("context 4 : ", context)
     return context
 
 
@@ -214,7 +221,7 @@ def fifthInteraction(text, emotion, furhat, context):
         drinkchoice = "beer"
     else:
         drinkchoice = "cocktail"
-    if context[context["preference"]]:
+    if context[context["Preference"]]:
         line = f"Hmm.. I noticed that you seem to be {emotion}, that you would like a {drinkchoice}, and that you would prefer something {context['Preference']}."
     else:
         line = f"Hmm.. I noticed that you seem to be {emotion}, that you would like a {drinkchoice}, and that you would not prefer something {context['Preference']}."
@@ -222,9 +229,24 @@ def fifthInteraction(text, emotion, furhat, context):
         line,
         furhat,
     )
-    bsay(f"How about a {drink}?", furhat)
-
+    bsay(f"Sound like you need a {drink} then! Would you like to know something about the {drink}?", furhat)
+    context["Drink"] = drink
+    print("context 5: ", context)
     return context
+
+def sixthInteraction(text, emotion, furhat, context):
+
+    chosendrink = context["Drink"]
+
+    answer = analyzer.polarity_scores(text)
+
+    if answer["neg"] < answer["pos"]:
+        dinfo = drinkinfo(chosendrink)
+        bsay(f"{dinfo}", furhat)
+        bsay("enjoy your drink!", furhat)
+    else: 
+        bsay(f"Okay then, enjoy your {chosendrink}", furhat)
+
 
 
 def contextToDrink(beer, emotion, preference, preferencefeeling):
@@ -248,6 +270,45 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
             if all(elem in ingredients for elem in [beer, emotion, pref]):
                 matching_drinks.append(drink)
     return random.choice(matching_drinks)
+
+def drinkinfo(drink):
+
+    drinkinfodict = {
+    "Indian Pale Ale": "Indian Pale Ale, or IPA, originated in England and was later adapted by British brewers for export to India. The extra hops helped preserve the beer during the long sea voyage.",
+    "Belgian Double": "Belgian Double is a rich and malty beer brewed by Belgian Trappist monks, known for its deep flavors and higher alcohol content.",
+    "Russian Imperial Stout": "Russian Imperial Stout, a favorite of Catherine the Great's court in 18th-century Russia, is a robust and dark beer with origins in England.",
+    "Rasberry Fruit Labmic": "Raspberry Fruit Lambic is a Belgian beer with a fruity twist. Lambics are fermented through exposure to wild yeast and bacteria, resulting in a unique and refreshing brew.",
+    "American Pale Ale": "American Pale Ale, a hop-forward beer style, emerged in the United States during the craft beer revolution, showcasing the vibrant flavors of American hops.",
+    "Honey Wheat Ale": "Honey Wheat Ale is a sweet and smooth beer that often incorporates honey during the brewing process, adding a touch of natural sweetness.",
+    "Belgian Triple": "Belgian Triple, brewed by Trappist monks in Belgium, is a strong and golden ale known for its complex flavor profile and high alcohol content.",
+    "Hefeweizen": "Hefeweizen, a traditional German wheat beer, is prized for its fruity and spicy notes derived from the special yeast strain used in fermentation.",
+    "Porter": "Porter, a dark and flavorful beer, has its roots in 18th-century London. It gained popularity among porters and laborers, inspiring its name.",
+    "Milk Stout": "Milk Stout, a sweet and creamy beer, includes lactose in its brewing process, providing a smooth texture and a hint of sweetness.",
+    "Barleywine": "Barleywine is a strong ale with a high alcohol content, originally brewed in England. Despite its name, it's more of a beer than a wine.",
+    "Fruit Beer": "Fruit Beer comes in various styles, incorporating different fruits into the brewing process to create a refreshing and fruity taste.",
+    "Session IPA": "Session IPA is a lower-alcohol version of the classic IPA, allowing beer enthusiasts to enjoy the hoppy goodness for an extended 'session' without the heavy alcohol impact.",
+    "Blonde Ale": "Blonde Ale is a light and easy-drinking beer with a golden hue, offering a balanced flavor profile that appeals to a wide range of beer drinkers.",
+    "Double IPA": "Double IPA, or DIPA, is a bold and hoppy beer with an extra dose of hops, providing a more intense flavor experience than its single IPA counterpart.",
+    "Fruit-infused Pale Ale": "Fruit-infused Pale Ale combines the hoppy goodness of a pale ale with the added twist of fruity flavors, creating a delightful and aromatic beverage.",
+    "Negroni": "Negroni, a classic cocktail originating in Italy, is a perfect balance of gin, vermouth, and Campari, creating a sophisticated and bitter-sweet flavor profile.",
+    "Bitter lemon drop": "Bitter Lemon Drop is a modern twist on the classic cocktail, featuring vodka, triple sec, and a splash of bitter lemon for a refreshing and zesty taste.",
+    "Zombie": "Zombie, a Tiki cocktail with a mysterious origin, packs a punch with a mix of various rums and fruit juices, creating a tropical and potent libation.",
+    "Rasberry Mojito": "Raspberry Mojito is a fruity and refreshing take on the classic Cuban cocktail, blending rum, mint, lime, and raspberries for a delightful summertime drink.",
+    "Espresso Martini": "Espresso Martini is a caffeinated cocktail that combines vodka, coffee liqueur, and freshly brewed espresso, creating a perfect blend of bold flavors and a caffeine kick.",
+    "Blue Lagoon": "Blue Lagoon, a vibrant and tropical cocktail, features vodka, blue curaçao, and lemonade, transporting you to a turquoise paradise with each sip.",
+    "Long island iced tea": "Long Island Iced Tea, despite its name, contains no actual tea. Instead, it's a potent mix of vodka, rum, gin, tequila, triple sec, sour mix, and a splash of cola.",
+    "Mango Tango": "Mango Tango is a fruity and exotic cocktail that combines mango vodka, triple sec, and mango nectar, creating a dance of tropical flavors on your palate.",
+    "Americano": "Americano is a classic Italian cocktail with a simple yet elegant combination of Campari, sweet vermouth, and soda water, resulting in a refreshing and bittersweet drink.",
+    "Amaretto Sour": "Amaretto Sour is a sweet and tangy cocktail featuring amaretto liqueur, lemon juice, and simple syrup, creating a perfect balance of flavors.",
+    "Rusty Nail": "Rusty Nail is a Scotch-based cocktail with a robust and smoky flavor, combining Scotch whisky and Drambuie for a warming and sophisticated drink.",
+    "Bellini": "Bellini, created in Venice, is a sparkling cocktail made with Prosecco and peach purée, offering a delightful and elegant drink perfect for celebrations.",
+    "Aperol Spritz": "Aperol Spritz, a popular Italian aperitif, combines Aperol, Prosecco, and soda water, creating a light and refreshing drink with a vibrant orange hue.",
+    "Mai Tai": "Mai Tai, a tropical cocktail with roots in Polynesia, features a blend of rum, lime juice, orgeat syrup, and orange liqueur, creating a balanced and flavorful drink.",
+    "Margarita": "Margarita, a classic Mexican cocktail, combines tequila, triple sec, and lime juice, served in a salt-rimmed glass for a perfect balance of sweet, sour, and salty.",
+    "Strawberry Daiquiri": "Strawberry Daiquiri is a fruity and icy cocktail made with rum, lime juice, simple syrup, and fresh strawberries, offering a sweet and refreshing treat.",
+}
+    return drinkinfodict[drink]
+
 
 
 def findName(text):
