@@ -196,19 +196,24 @@ def fourthInteraction(text, emotion, furhat, context):
 
 
 def fifthInteraction(text, emotion, furhat, context):
+    text = text.lower()
     if context["Question"] == "Preference":
-        vs = analyzer.polarity_scores(text)
-        if "bitter" in text.lower():
+        if "bitter" in text:
             context["Preference"] = "Bitter"
-        elif "sweet" in text.lower():
+            text = text.replace("bitter", "")
+        elif "sweet" in text:
             context["Preference"] = "Sweet"
-        elif "strong" in text.lower():
+            text = text.replace("sweet", "")
+        elif "strong" in text:
             context["Preference"] = "Strong"
-        elif "fruity" in text.lower():
+            text = text.replace("strong", "")
+        elif "fruity" in text:
             context["Preference"] = "Fruity"
+            text = text.replace("fruity", "")
         else:
             context["Preference"] = "None"
 
+        vs = analyzer.polarity_scores(text)
         if vs["neg"] > vs["pos"]:
             context[context["Preference"]] = False
         else:
