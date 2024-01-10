@@ -55,7 +55,7 @@ def process_voice_command(text):
 def calculate_emotion():
     global cam, FD, ED, emotion_queue
     last_emotions = []
-    nth_frame = 3
+    nth_frame = 5
     frame_counter = -1  # start from -1 so first frame is frame 0
     while True:
         ret, frame = cam.read()
@@ -70,7 +70,7 @@ def calculate_emotion():
             x, y, w, h = face
             emotion = ED.predict(frame[y : y + h, x : x + w])
             last_emotions.append(emotion)
-        if len(last_emotions) > 10:  # change this to make it more responsive/robust
+        if len(last_emotions) > 5:  # change this to make it more responsive/robust
             last_emotions.pop(0)
 
         if len(last_emotions) > 0:
@@ -103,6 +103,7 @@ context = {}
 # when doing this our abrtender could also be the one initializing the convo
 while True:
     aud = capture_voice_input()
+
     text = convert_voice_to_text(aud)
     try:
         emotion = emotion_queue.get(timeout=1)  # Timeout to avoid blocking indefinitely
