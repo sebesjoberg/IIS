@@ -44,7 +44,7 @@ drinkdict = {
     "Aperol Spritz": ["Happy", "Bitter", False],
     "Mai Tai": ["Happy", "Sweet", False],
     "Margarita": ["Happy", "Strong", False],
-    "Strawberry Daquiri": ["Happy", "Fruity", False],
+    "Strawberry Daiquiri": ["Happy", "Fruity", False],
 }
 
 
@@ -166,6 +166,7 @@ def secondInteraction(text, emotion, furhat, context):
         bsay("It looks like you had a long day?", furhat)
 
     else:
+        furhat.gesture(name="Smile")
         bsay("It is a good day is it not?", furhat)
     context["Question"] = None
     print("context 2 : ", context)
@@ -174,6 +175,7 @@ def secondInteraction(text, emotion, furhat, context):
 def thirdInteraction(text, emotion, furhat, context):
     bsay("Well you have come to the right place then", furhat)
     sleep(0.1)
+    furhat.gesture(name="Smile")
     bsay("Do you like beer?", furhat)
     context["Question"] = "Beer"
     print("context 3 : ", context)
