@@ -93,7 +93,8 @@ emotion_thread.daemon = True
 emotion_thread.start()
 
 # set persona here
-set_persona("Amany", furhat)
+
+set_persona(furhat)
 interaction_count = 0
 context = {}
 # could make the whole loop into a function that runs over the specified interaction max count

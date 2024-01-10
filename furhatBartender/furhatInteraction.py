@@ -105,21 +105,22 @@ def getGestureWithTime(name, time):
     return {
         "frames": [
             {
-                "time": [time],
+                "time": [0.33 / time],
                 "persist": False,
-                "params": {name: time},
+                "params": {name: 1.0},
             },
         ],
         "class": "furhatos.gestures.Gesture",
     }
 
 
-def set_persona(persona, furhat):
+def set_persona(furhat):
     furhat.gesture(name="CloseEyes")
     furhat.gesture(body=LOOK_DOWN(speed=1), blocking=True)
     sleep(0.3)
     furhat.set_face(character="Marty", mask="Adult")
-    furhat.set_voice(name="DuncanNeural")
+    furhat.set_voice(name="Arthur-Neural")
+    print("set")
     sleep(2)
     furhat.gesture(body=LOOK_BACK(speed=1), blocking=True)
 
@@ -160,9 +161,8 @@ map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
 
 
 def firstInteraction(text, emotion, furhat, context):
-    gest = getGestureWithTime("smile", 3000)
-    print(gest)
-    furhat.gesture(body=gest)
+    furhat.gesture(name="BigSmile", blocking=True)
+
     bsay("Hello, what is your name friend?", furhat)
 
     context["Question"] = "Name"
@@ -174,31 +174,37 @@ def secondInteraction(text, emotion, furhat, context):
     if context["Question"] == "Name":
         context["Name"] = findName(text)
     if context["Name"] is not None:
+        furhat.gesture(name="Nod")
         bsay(
             f"Welcome, {context['Name']}, you can call me barty the bartender!", furhat
         )
     else:
+        furhat.gesture(name="ExpressDisgust")
         bsay("Okay, keep your secrets then!", furhat)
     if emotion in ["Furious"]:
+        furhat.gesture(name="BrowFrown")
         bsay("Why so serious?", furhat)
 
     elif emotion in ["Aghast"]:
+        furhat.gesture(name="Thoughtful")
         bsay("Is something bothering you?", furhat)
 
     elif emotion in ["Melancholic"]:
+        furhat.gesture(name="GazeAway")
         bsay("It looks like you had a long day?", furhat)
 
     else:
-        furhat.gesture(name="Smile")
+        furhat.gesture(name="BigSmile")
         bsay("It is a good day is it not?", furhat)
     context["Question"] = None
 
 
 def thirdInteraction(text, emotion, furhat, context):
     bsay("Well you have come to the right place then", furhat)
+
+    furhat.gesture(name="Wink", blocking=True)
     sleep(0.1)
-    furhat.gesture(name="Smile")
-    bsay("Do you like beer?", furhat)
+    bsay("Would you like a beer?", furhat)
     context["Question"] = "Beer"
 
     return context
@@ -212,7 +218,7 @@ def fourthInteraction(text, emotion, furhat, context):
             bsay("Cocktail it is!", furhat)
         else:
             context["Beer"] = True
-
+    furhat.gesture(name="Roll")
     bsay("Do you feel like something bitter, sweet, strong or fruity?", furhat)
     context["Question"] = "Preference"
 
@@ -234,8 +240,11 @@ def fifthInteraction(text, emotion, furhat, context):
         elif "fruity" in text:
             context["Preference"] = "Fruity"
             text = text.replace("fruity", "")
+        elif "better" in text:
+            context["Preference"] = "Bitter"
+            text = text.replace("better", "")
         else:
-            context["Preference"] = "None"
+            context["Preference"] = None
 
         vs = analyzer.polarity_scores(text)
         if vs["neg"] > vs["pos"]:
@@ -258,6 +267,7 @@ def fifthInteraction(text, emotion, furhat, context):
         line,
         furhat,
     )
+    furhat.gesture(name="Nod")
     bsay(
         f"Sound like you need a {drink} then! Would you like to know something about the {drink}?",
         furhat,
@@ -293,7 +303,9 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
             preference = ["Bitter", "Sweet", "Fruity"]
         else:
             preference = ["Bitter", "Sweet", "Strong"]
-
+    if preference == [None]:
+        preference = ["Bitter", "Sweet", "Strong", "Fruity"]
+    print(beer, emotion, preference, preferencefeeling)
     # Bitter sweet strong fruity
     matching_drinks = []
     for pref in preference:
