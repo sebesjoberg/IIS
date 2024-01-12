@@ -1,5 +1,3 @@
-# Main file from where the actual bartender system can be ranned
-
 import queue
 import threading
 from collections import Counter
@@ -39,17 +37,6 @@ def convert_voice_to_text(aud):
         text = ""
         print("Error; {0}".format(e))
     return text
-
-
-def process_voice_command(text):
-    if "hello" in text.lower():
-        print("Hello! How can I help you?")
-    elif "goodbye" in text.lower():
-        print("Goodbye! Have a great day!")
-        return True
-    else:
-        print("I didn't understand that command. Please try again.")
-    return False
 
 
 def calculate_emotion():
@@ -92,22 +79,17 @@ emotion_thread = threading.Thread(target=calculate_emotion)
 emotion_thread.daemon = True
 emotion_thread.start()
 
-# set persona here
 
 set_persona(furhat)
 interaction_count = 0
 context = {}
-# could make the whole loop into a function that runs over the specified interaction max count
-# run the loop until max count, but only start/restart the loop if a face appears in the frame?
-# should probably restart the whole emotionthread in that case too
-# do put that emotion on the first face in the queue too(so that it is not empty for first interaction)
-# when doing this our abrtender could also be the one initializing the convo
+
 while True:
     aud = capture_voice_input()
 
     text = convert_voice_to_text(aud)
     try:
-        emotion = emotion_queue.get(timeout=1)  # Timeout to avoid blocking indefinitely
+        emotion = emotion_queue.get(timeout=1)  # Timeout to avoid blocking
     except queue.Empty:
         emotion = "Neutral"  # Default emotion if queue is empty
     print(emotion)

@@ -9,7 +9,6 @@ from torchvision import datasets
 
 # this model can be called with an img containing one face to predict the faces emotion
 # please try and use as little background as possible, aka only the face
-# should put so that gpu is used if available
 class ConditionalToPILImage:
     def __call__(self, img):
         if not isinstance(img, Image.Image):
@@ -47,7 +46,6 @@ class EmotionDetector:
         return self.map.get(predicted.item(), "Unknown Emotion")
 
     def evaluate(self):
-        # Path to the root folder containing subfolders for each emotion
         data_path = "../data/4EmoSet"
         train_loader = DataLoader(
             datasets.ImageFolder(root=data_path + "/train", transform=self.transform),

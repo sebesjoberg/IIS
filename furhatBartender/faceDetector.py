@@ -7,8 +7,7 @@ class FaceDetector:
             "userPerception/model/frontal_face_features.xml"
         )
 
-    def find_face(self, image):  # takes grayscale image
-        # return biggest face, if no face it returns none
+    def find_face(self, image):  # return biggest face, if no face it returns none
         faces = self.model.detectMultiScale(
             image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
         )

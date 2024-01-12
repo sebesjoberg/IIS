@@ -121,9 +121,7 @@ if keep_training:
 else:
     model = FaceCNN().to(device)
     best_val_accuracy = 0
-# weights = torch.tensor(
-#    [225 / 1188, 243 / 1188, 318 / 1188, 402 / 1188], dtype=torch.float
-# )
+#
 weights = torch.tensor(
     [2004 / 10468, 1506 / 10468, 2922 / 10468, 4036 / 10468], dtype=torch.float
 )
@@ -141,6 +139,7 @@ for epoch in range(num_epochs):
     running_loss = 0.0
     correct_train = 0
     total_train = 0
+    train_loader.dataset.transform = train_transform
     model.train()
 
     for i, data in enumerate(train_loader, 0):

@@ -7,11 +7,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 nlp = spacy.load("en_core_web_trf")
 analyzer = SentimentIntensityAnalyzer()
-FACES = {"Loo": "Patricia", "Amany": "Nazar"}
 
-VOICES_EN = {"Loo": "BellaNeural", "Amany": "CoraNeural"}
-
-VOICES_NATIVE = {"Loo": "SofieNeural", "Amany": "AmanyNeural"}
 drinkdict = {
     "Indian Pale Ale": ["Furious", "Bitter", True],
     "Belgian Double": ["Furious", "Sweet", True],
@@ -84,7 +80,6 @@ def LOOK_BACK(speed):
     }
 
 
-# DO NOT CHANGE
 def LOOK_DOWN(speed=1):
     return {
         "frames": [
@@ -120,7 +115,6 @@ def set_persona(furhat):
     sleep(0.3)
     furhat.set_face(character="Marty", mask="Adult")
     furhat.set_voice(name="Arthur-Neural")
-    print("set")
     sleep(2)
     furhat.gesture(body=LOOK_BACK(speed=1), blocking=True)
 
@@ -131,10 +125,8 @@ def bsay(line, furhat):
 
 
 def interaction(text, emotion, furhat, interaction_count, context):
-    print(context)
     match interaction_count:
         case 0:
-            # here we could do some check for potential drink order using the spacy nl for NOUNS perhaps and matching to our drink_dict
             context = firstInteraction(text, emotion, furhat, context)
 
         case 1:
@@ -153,7 +145,7 @@ def interaction(text, emotion, furhat, interaction_count, context):
             context = sixthInteraction(text, emotion, furhat, context)
 
         case _:
-            context = bsay("Out of case")
+            bsay("No more interactions",furhat)
     return context
 
 
@@ -162,11 +154,8 @@ map = {0: "Aghast", 1: "Furious", 2: "Happy", 3: "Melancholic"}
 
 def firstInteraction(text, emotion, furhat, context):
     furhat.gesture(name="BigSmile", blocking=True)
-
     bsay("Hello, what is your name friend?", furhat)
-
     context["Question"] = "Name"
-
     return context
 
 
@@ -221,7 +210,6 @@ def fourthInteraction(text, emotion, furhat, context):
     furhat.gesture(name="Roll")
     bsay("Do you feel like something bitter, sweet, strong or fruity?", furhat)
     context["Question"] = "Preference"
-
     return context
 
 
@@ -305,8 +293,6 @@ def contextToDrink(beer, emotion, preference, preferencefeeling):
             preference = ["Bitter", "Sweet", "Strong"]
     if preference == [None]:
         preference = ["Bitter", "Sweet", "Strong", "Fruity"]
-    print(beer, emotion, preference, preferencefeeling)
-    # Bitter sweet strong fruity
     matching_drinks = []
     for pref in preference:
         for drink, ingredients in drinkdict.items():
@@ -360,16 +346,8 @@ def findName(text):
     except:
         return None
 
-    # legacy code down below
-    # try:
-    # return text.split()[-1]
-    # except:
-    # return None
-
 
 if __name__ == "__main__":
-    # end_program = False
-    # print(contextToDrink(True, "Furious", "Fruity", False))
-    # demo_personas()
-    # idle_animation()
+    print(contextToDrink(True, "Furious", "Fruity", False))
+    idle_animation()
     print(findName("john, My name is Sebastian"))
